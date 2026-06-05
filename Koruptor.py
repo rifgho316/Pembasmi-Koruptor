@@ -4,23 +4,14 @@ import sys
 import random
 import os
 
-# --- INISIALISASI ---
+# --- INISIALISASI DASAR ---
 pygame.init()
 pygame.font.init()
-pygame.mixer.init()
-
-try:
-    shoot_sfx = pygame.mixer.Sound('shoot.wav') if os.path.exists('shoot.wav') else None
-    hurt_sfx = pygame.mixer.Sound('hurt.wav') if os.path.exists('hurt.wav') else None
-    rat_sfx = pygame.mixer.Sound('rat.wav') if os.path.exists('rat.wav') else None
-    boss_sfx = pygame.mixer.Sound('boss.wav') if os.path.exists('boss.wav') else None
-except:
-    shoot_sfx = hurt_sfx = rat_sfx = boss_sfx = None
 
 WIDTH = 1280
 HEIGHT = 720
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Retro FPS - The Corrupt Rats & The Boss")
+pygame.display.set_caption("Retro FPS - Custom Sprites & Dynamic Emoji")
 clock = pygame.time.Clock()
 
 pygame.mouse.set_visible(False)
@@ -29,6 +20,12 @@ pygame.event.set_grab(True)
 HUD_HEIGHT = 160
 VIEW_HEIGHT = HEIGHT - HUD_HEIGHT
 view_surface = pygame.Surface((WIDTH, VIEW_HEIGHT))
+
+# Variabel Suara dikosongkan agar aman dari error saat kamu merekam video penghapusan
+shoot_sfx = None
+hurt_sfx = None
+rat_sfx = None
+boss_sfx = None
 
 # --- 1. PETA GAME ---
 world_map = [
@@ -58,7 +55,9 @@ player_armor = 0
 pain_timer = 0
 attack_cooldown = 0
 game_over = False
+
 kill_count = 0 
+boss_spawn_counter = 0 
 
 # --- 3. STATUS SENJATA & RELOAD (MAGASIN 12) ---
 has_weapon = False       
@@ -66,7 +65,7 @@ max_mag = 12
 current_mag = 12
 reserve_ammo = 24
 reload_timer = 0
-RELOAD_TIME = 60 # Waktu reload 1 detik
+RELOAD_TIME = 60 
 
 MAX_DEPTH = 450.0 
 spawn_timer = 0
@@ -75,8 +74,7 @@ boss_sound_timer = 0
 
 entities = [
     {'id': 'gun_pickup', 'type': 'item', 'x': 350.0, 'y': 350.0, 'active': True},
-    # Tikus Berdasi Pertama
-    {'id': 'mon_1', 'type': 'monster', 'x': 400.0, 'y': 200.0, 'active': True, 'hp': 4, 'speed': 1.5, 'offset': random.random()}
+    {'id': 'mon_1', 'type': 'monster', 'x': 400.0, 'y': 200.0, 'active': True, 'hp': 2, 'speed': 1.6, 'offset': random.random()}
 ]
 
 bullets = []
@@ -86,7 +84,6 @@ muzzle_flash_timer = 0
 font_huge = pygame.font.Font(None, 90)
 font_large = pygame.font.Font(None, 40)
 font_small = pygame.font.Font(None, 28)
-
 z_buffer = [0] * WIDTH
 
 def apply_fog(color, intensity):
@@ -116,7 +113,6 @@ def cast_rays():
 
         corrected_distance = distance_to_wall * math.cos(ray_angle - player_angle)
         if corrected_distance <= 0: corrected_distance = 0.1 
-        
         for w in range(4):
             if x + w < WIDTH: z_buffer[x + w] = corrected_distance
         
@@ -168,80 +164,101 @@ def render_sprites():
             if 0 <= int(screen_x) < WIDTH:
                 if z_buffer[int(screen_x)] < dist: continue
 
-            # Ukuran dasar, Boss lebih besar 1.5x
             base_size = (VIEW_HEIGHT / dist) * 40
             size = base_size * 1.5 if cat == 'boss' else base_size
             item_y = (VIEW_HEIGHT / 2) + (VIEW_HEIGHT / dist) * 10
-            
             hover = math.sin(pygame.time.get_ticks() * 0.005) * 5
             rect = pygame.Rect(screen_x - size / 4, item_y + hover, size / 2, size / 2)
             
+            # --- DESAIN SPRITE ITEM & DROP BARU ---
             if cat == 'item': 
-                pygame.draw.rect(view_surface, (int(255*intensity), int(215*intensity), 0), rect) 
+                # Pistol Emas Pertama
+                pygame.draw.rect(view_surface, apply_fog((255, 215, 0), intensity), rect) 
+                
             elif cat == 'ammo': 
-                pygame.draw.rect(view_surface, (int(200*intensity), int(50*intensity), int(50*intensity)), rect)
+                # Kotak Amunisi Militer (Hijau Tua dengan ujung peluru)
+                box_color = apply_fog((60, 70, 50), intensity)
+                stripe_color = apply_fog((200, 30, 30), intensity)
+                bullet_tip = apply_fog((255, 215, 0), intensity)
+                
+                pygame.draw.rect(view_surface, box_color, rect)
+                pygame.draw.rect(view_surface, stripe_color, (rect.x, rect.y + size*0.2, rect.width, size*0.15))
+                # 3 Peluru menyembul di atas
+                for i in range(3):
+                    pygame.draw.rect(view_surface, bullet_tip, (rect.x + size*0.08 + i*size*0.15, rect.y - size*0.1, size*0.08, size*0.1))
+
             elif cat == 'armor': 
-                pygame.draw.rect(view_surface, (0, int(100*intensity), int(255*intensity)), rect)
+                # Perisai / Armor (Bentuk Shield)
+                shield_blue = apply_fog((30, 100, 200), intensity)
+                shield_border = apply_fog((180, 180, 180), intensity)
+                
+                shield_poly = [
+                    (screen_x - size*0.25, item_y + hover - size*0.1), 
+                    (screen_x + size*0.25, item_y + hover - size*0.1), 
+                    (screen_x + size*0.25, item_y + hover + size*0.2), 
+                    (screen_x, item_y + hover + size*0.4),             
+                    (screen_x - size*0.25, item_y + hover + size*0.2)  
+                ]
+                pygame.draw.polygon(view_surface, shield_blue, shield_poly)
+                pygame.draw.polygon(view_surface, shield_border, shield_poly, max(2, int(size*0.04)))
+                # Garis silang di tengah perisai
+                pygame.draw.line(view_surface, shield_border, (screen_x, item_y + hover - size*0.1), (screen_x, item_y + hover + size*0.4), max(1, int(size*0.04)))
+
             elif cat == 'health': 
-                pygame.draw.rect(view_surface, (int(200*intensity), int(200*intensity), int(200*intensity)), rect)
-                c_w = size / 6; c_h = size / 2.5
-                pygame.draw.rect(view_surface, (int(200*intensity), 0, 0), (screen_x - c_w/2, item_y + hover + size/4 - c_h/2, c_w, c_h))
-                pygame.draw.rect(view_surface, (int(200*intensity), 0, 0), (screen_x - c_h/2, item_y + hover + size/4 - c_w/2, c_h, c_w))
+                # Medkit Putih
+                med_white = apply_fog((220, 220, 220), intensity)
+                med_red = apply_fog((200, 30, 30), intensity)
+                pygame.draw.rect(view_surface, med_white, rect)
+                
+                c_w = size * 0.15
+                c_h = size * 0.35
+                pygame.draw.rect(view_surface, med_red, (screen_x - c_w/2, item_y + hover + size/4 - c_h/2, c_w, c_h))
+                pygame.draw.rect(view_surface, med_red, (screen_x - c_h/2, item_y + hover + size/4 - c_w/2, c_h, c_w))
                 
             elif cat == 'monster':
-                # --- MONSTER BIASA: TIKUS BERDASI (HITAM PUTIH KOMIK) ---
                 breathe = math.sin(pygame.time.get_ticks() * 0.01 + obj['offset'] * 10) * (size/15)
                 body_y = item_y - size/3 + breathe
                 head_y = body_y - size*0.2
                 
-                b_dark = apply_fog((20, 20, 20), intensity)
-                b_white = apply_fog((220, 220, 220), intensity)
+                b_dark = apply_fog((10, 10, 10), intensity)
+                b_light = apply_fog((230, 230, 230), intensity)
+                b_gray = apply_fog((100, 100, 100), intensity)
                 
-                # Jas Hitam
-                pygame.draw.polygon(view_surface, b_dark, [
-                    (screen_x - size*0.4, body_y + size*0.6),
-                    (screen_x + size*0.4, body_y + size*0.6),
-                    (screen_x + size*0.3, body_y),
-                    (screen_x - size*0.3, body_y)
-                ])
-                # Kemeja Putih Berbentuk V
-                pygame.draw.polygon(view_surface, b_white, [
-                    (screen_x, body_y + size*0.4),
-                    (screen_x - size*0.15, body_y),
-                    (screen_x + size*0.15, body_y)
-                ])
-                # Dasi Belang-belang Hitam
-                pygame.draw.polygon(view_surface, b_dark, [
-                    (screen_x - size*0.05, body_y + size*0.1),
-                    (screen_x + size*0.05, body_y + size*0.1),
-                    (screen_x + size*0.02, body_y + size*0.35),
-                    (screen_x - size*0.02, body_y + size*0.35)
-                ])
+                pygame.draw.polygon(view_surface, b_dark, [(screen_x - size*0.4, body_y + size*0.6), (screen_x + size*0.4, body_y + size*0.6), (screen_x + size*0.25, body_y), (screen_x - size*0.25, body_y)])
+                pygame.draw.polygon(view_surface, b_gray, [(screen_x, body_y + size*0.45), (screen_x - size*0.2, body_y + size*0.1), (screen_x - size*0.1, body_y)])
+                pygame.draw.polygon(view_surface, b_gray, [(screen_x, body_y + size*0.45), (screen_x + size*0.2, body_y + size*0.1), (screen_x + size*0.1, body_y)])
+                pygame.draw.polygon(view_surface, b_light, [(screen_x, body_y + size*0.4), (screen_x - size*0.12, body_y), (screen_x + size*0.12, body_y)])
+                pygame.draw.polygon(view_surface, b_dark, [(screen_x - size*0.04, body_y + size*0.05), (screen_x + size*0.04, body_y + size*0.05), (screen_x + size*0.02, body_y + size*0.35), (screen_x - size*0.02, body_y + size*0.35)])
+                pygame.draw.line(view_surface, b_light, (screen_x - size*0.03, body_y + size*0.1), (screen_x + size*0.03, body_y + size*0.15), max(1, int(size*0.02)))
+                pygame.draw.line(view_surface, b_light, (screen_x - size*0.03, body_y + size*0.2), (screen_x + size*0.03, body_y + size*0.25), max(1, int(size*0.02)))
 
-                # Telinga Tikus Bulat
-                pygame.draw.circle(view_surface, b_dark, (int(screen_x - size*0.25), int(head_y - size*0.2)), int(size*0.15))
-                pygame.draw.circle(view_surface, b_white, (int(screen_x - size*0.25), int(head_y - size*0.2)), int(size*0.1))
-                pygame.draw.circle(view_surface, b_dark, (int(screen_x + size*0.25), int(head_y - size*0.2)), int(size*0.15))
-                pygame.draw.circle(view_surface, b_white, (int(screen_x + size*0.25), int(head_y - size*0.2)), int(size*0.1))
+                pygame.draw.circle(view_surface, b_dark, (int(screen_x - size*0.28), int(head_y - size*0.2)), int(size*0.18))
+                pygame.draw.circle(view_surface, b_light, (int(screen_x - size*0.28), int(head_y - size*0.2)), int(size*0.12))
+                for i in range(3): pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.28), int(head_y - size*0.2)), (int(screen_x - size*0.28 - size*0.05), int(head_y - size*0.2 - i*size*0.04)), max(1, int(size*0.01)))
 
-                # Wajah Putih Tikus
-                pygame.draw.ellipse(view_surface, b_white, (int(screen_x - size*0.3), int(head_y - size*0.25), int(size*0.6), int(size*0.5)))
-                
-                # Mata Hitam Melotot
-                pygame.draw.circle(view_surface, b_dark, (int(screen_x - size*0.1), int(head_y - size*0.05)), int(size*0.06))
-                pygame.draw.circle(view_surface, b_dark, (int(screen_x + size*0.1), int(head_y - size*0.05)), int(size*0.06))
-                
-                # Hidung Hitam
-                pygame.draw.circle(view_surface, b_dark, (int(screen_x), int(head_y + size*0.15)), int(size*0.04))
+                pygame.draw.circle(view_surface, b_dark, (int(screen_x + size*0.28), int(head_y - size*0.2)), int(size*0.18))
+                pygame.draw.circle(view_surface, b_light, (int(screen_x + size*0.28), int(head_y - size*0.2)), int(size*0.12))
+                for i in range(3): pygame.draw.line(view_surface, b_dark, (int(screen_x + size*0.28), int(head_y - size*0.2)), (int(screen_x + size*0.28 + size*0.05), int(head_y - size*0.2 - i*size*0.04)), max(1, int(size*0.01)))
 
-                # Kumis Kiri Kanan
-                pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.15), int(head_y + size*0.1)), (int(screen_x - size*0.45), int(head_y + size*0.05)), max(1, int(size*0.02)))
-                pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.15), int(head_y + size*0.15)), (int(screen_x - size*0.45), int(head_y + size*0.15)), max(1, int(size*0.02)))
-                pygame.draw.line(view_surface, b_dark, (int(screen_x + size*0.15), int(head_y + size*0.1)), (int(screen_x + size*0.45), int(head_y + size*0.05)), max(1, int(size*0.02)))
-                pygame.draw.line(view_surface, b_dark, (int(screen_x + size*0.15), int(head_y + size*0.15)), (int(screen_x + size*0.45), int(head_y + size*0.15)), max(1, int(size*0.02)))
+                spiky_hair = [(screen_x - size*0.15, head_y - size*0.25), (screen_x - size*0.1, head_y - size*0.4), (screen_x - size*0.05, head_y - size*0.3), (screen_x, head_y - size*0.45), (screen_x + size*0.05, head_y - size*0.3), (screen_x + size*0.1, head_y - size*0.4), (screen_x + size*0.15, head_y - size*0.25)]
+                pygame.draw.polygon(view_surface, b_dark, spiky_hair)
+
+                pygame.draw.ellipse(view_surface, b_light, (int(screen_x - size*0.25), int(head_y - size*0.3), int(size*0.5), int(size*0.55)))
+                pygame.draw.circle(view_surface, b_dark, (int(screen_x - size*0.1), int(head_y - size*0.08)), int(size*0.06))
+                pygame.draw.circle(view_surface, b_light, (int(screen_x - size*0.11), int(head_y - size*0.09)), int(size*0.02))
+                pygame.draw.circle(view_surface, b_dark, (int(screen_x + size*0.1), int(head_y - size*0.08)), int(size*0.06))
+                pygame.draw.circle(view_surface, b_light, (int(screen_x + size*0.09), int(head_y - size*0.09)), int(size*0.02))
+                pygame.draw.polygon(view_surface, b_dark, [(screen_x - size*0.05, head_y + size*0.1), (screen_x + size*0.05, head_y + size*0.1), (screen_x, head_y + size*0.15)])
+                pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.1), int(head_y + size*0.2)), (int(screen_x + size*0.1), int(head_y + size*0.2)), max(2, int(size*0.02)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x), int(head_y + size*0.15)), (int(screen_x), int(head_y + size*0.2)), max(2, int(size*0.02)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.15), int(head_y + size*0.1)), (int(screen_x - size*0.45), int(head_y + size*0.02)), max(1, int(size*0.015)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.15), int(head_y + size*0.15)), (int(screen_x - size*0.45), int(head_y + size*0.12)), max(1, int(size*0.015)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x - size*0.15), int(head_y + size*0.2)), (int(screen_x - size*0.40), int(head_y + size*0.22)), max(1, int(size*0.015)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x + size*0.15), int(head_y + size*0.1)), (int(screen_x + size*0.45), int(head_y + size*0.02)), max(1, int(size*0.015)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x + size*0.15), int(head_y + size*0.15)), (int(screen_x + size*0.45), int(head_y + size*0.12)), max(1, int(size*0.015)))
+                pygame.draw.line(view_surface, b_dark, (int(screen_x + size*0.15), int(head_y + size*0.2)), (int(screen_x + size*0.40), int(head_y + size*0.22)), max(1, int(size*0.015)))
 
             elif cat == 'boss':
-                # --- MONSTER BOS: RAT KING MULTI-HEAD (MUTASI DAGING) ---
                 breathe = math.sin(pygame.time.get_ticks() * 0.02 + obj['offset'] * 10) * (size/20)
                 body_y = item_y - size/3 + breathe
                 
@@ -252,7 +269,6 @@ def render_sprites():
                 e_glow = apply_fog((255, 0, 0), intensity)
 
                 pygame.draw.ellipse(view_surface, b_dark, (int(screen_x - size*0.7), int(body_y - size*0.3), int(size*1.4), int(size*0.8)))
-                
                 for i in range(5):
                     lx = screen_x + math.sin(obj['offset'] * 10 + i * 2) * size * 0.5
                     ly = body_y + math.cos(obj['offset'] * 10 + i * 2) * size * 0.2
@@ -261,13 +277,9 @@ def render_sprites():
                 for i in range(3):
                     hx = screen_x - size*0.4 + (i * size*0.4)
                     hy = body_y - size*0.1 + math.sin(pygame.time.get_ticks()*0.005 + i + obj['offset']) * size*0.15
-                    
                     pygame.draw.ellipse(view_surface, b_dark, (int(hx - size*0.2), int(hy - size*0.15), int(size*0.4), int(size*0.3)))
                     pygame.draw.rect(view_surface, blood, (int(hx - size*0.15), int(hy), int(size*0.3), int(size*0.15)))
-                    
-                    for j in range(4):
-                        pygame.draw.rect(view_surface, bone, (int(hx - size*0.12 + j*size*0.07), int(hy), int(size*0.04), int(size*0.08)))
-                        
+                    for j in range(4): pygame.draw.rect(view_surface, bone, (int(hx - size*0.12 + j*size*0.07), int(hy), int(size*0.04), int(size*0.08)))
                     pygame.draw.circle(view_surface, e_glow, (int(hx - size*0.1), int(hy - size*0.1)), int(size*0.04))
                     pygame.draw.circle(view_surface, e_glow, (int(hx + size*0.1), int(hy - size*0.1)), int(size*0.04))
 
@@ -288,9 +300,8 @@ def render_sprites():
 
 def update_entities_and_collision():
     global player_health, player_armor, pain_timer, attack_cooldown
-    global spawn_timer, rat_sound_timer, boss_sound_timer, entities, kill_count
+    global spawn_timer, rat_sound_timer, boss_sound_timer, entities, kill_count, boss_spawn_counter
     
-    # --- SPATIAL AUDIO DUA MONSTER ---
     if rat_sound_timer > 0: rat_sound_timer -= 1
     if boss_sound_timer > 0: boss_sound_timer -= 1
     
@@ -311,19 +322,11 @@ def update_entities_and_collision():
     if boss_sound_timer == 0 and min_boss_dist < MAX_DEPTH and boss_sfx:
         boss_sfx.set_volume(max(0.0, 1.0 - (min_boss_dist / MAX_DEPTH)))
         boss_sfx.play()
-        boss_sound_timer = 150 # Boss mengerang lebih pelan durasinya
+        boss_sound_timer = 150 
 
-    # --- SPAWN MONSTER ---
     spawn_timer += 1
-    if spawn_timer >= 150: # Lebih cepat
+    if spawn_timer >= 120: 
         spawn_timer = 0
-        
-        # Setiap 10 kill, spawn Boss
-        is_boss = (kill_count > 0 and kill_count % 10 == 0 and random.random() < 0.5)
-        m_type = 'boss' if is_boss else 'monster'
-        m_hp = 15 if is_boss else 4
-        m_speed = 0.8 if is_boss else 1.5 # Bos lambat, tikus biasa cepat
-        
         while True:
             rx = random.randint(1, len(world_map[0])-2)
             ry = random.randint(1, len(world_map)-2)
@@ -331,10 +334,9 @@ def update_entities_and_collision():
                 sx = rx * TILE_SIZE + TILE_SIZE/2
                 sy = ry * TILE_SIZE + TILE_SIZE/2
                 if math.hypot(sx - player_x, sy - player_y) > 300: 
-                    entities.append({'id': f'{m_type}_{pygame.time.get_ticks()}', 'type': m_type, 'x': sx, 'y': sy, 'active': True, 'hp': m_hp, 'speed': m_speed, 'offset': random.random()})
+                    entities.append({'id': f'mon_{pygame.time.get_ticks()}', 'type': 'monster', 'x': sx, 'y': sy, 'active': True, 'hp': 2, 'speed': 1.6, 'offset': random.random()})
                     break
 
-    # --- PELURU & SISTEM DROP ---
     for b in bullets:
         if not b['active']: continue
         b['x'] += math.cos(b['angle']) * b['speed']
@@ -360,7 +362,19 @@ def update_entities_and_collision():
                         kill_count += 1 
                         
                         if ent['type'] == 'monster':
-                            # MONSTER BIASA: PASTI 1 Drop (80% Ammo, 15% Armor, 5% Heal)
+                            boss_spawn_counter += 1
+                            if boss_spawn_counter >= 10:
+                                boss_spawn_counter = 0
+                                while True:
+                                    rx = random.randint(1, len(world_map[0])-2)
+                                    ry = random.randint(1, len(world_map)-2)
+                                    if world_map[ry][rx] == 0:
+                                        sx = rx * TILE_SIZE + TILE_SIZE/2
+                                        sy = ry * TILE_SIZE + TILE_SIZE/2
+                                        if math.hypot(sx - player_x, sy - player_y) > 300:
+                                            entities.append({'id': f'boss_{pygame.time.get_ticks()}', 'type': 'boss', 'x': sx, 'y': sy, 'active': True, 'hp': 25, 'speed': 0.8, 'offset': random.random()})
+                                            break
+                            
                             roll = random.random()
                             if roll <= 0.80: drop_type = 'ammo'
                             elif roll <= 0.95: drop_type = 'armor'
@@ -368,22 +382,19 @@ def update_entities_and_collision():
                             entities.append({'id': f'drop_{random.random()}', 'type': drop_type, 'x': ent['x'], 'y': ent['y'], 'active': True})
                         
                         elif ent['type'] == 'boss':
-                            # BOS: PASTI 3 Drop (Peluang bagus: 60% Ammo, 30% Armor, 10% Heal)
                             for _ in range(3):
                                 roll = random.random()
                                 if roll <= 0.60: drop_type = 'ammo'
                                 elif roll <= 0.90: drop_type = 'armor'
                                 else: drop_type = 'health'
-                                
                                 entities.append({'id': f'drop_{random.random()}', 'type': drop_type, 'x': ent['x']+random.randint(-20,20), 'y': ent['y']+random.randint(-20,20), 'active': True})
                     break
 
-    # --- AI & DAMAGE ---
     for ent in entities:
         if ent['type'] in ['monster', 'boss'] and ent['active']:
             dist = math.hypot(player_x - ent['x'], player_y - ent['y'])
             
-            if 35 < dist < MAX_DEPTH:
+            if 45 < dist < MAX_DEPTH: 
                 dx = (player_x - ent['x']) / dist
                 dy = (player_y - ent['y']) / dist
                 
@@ -395,9 +406,9 @@ def update_entities_and_collision():
                 if world_map[int(new_ent_y / TILE_SIZE)][int(ent['x'] / TILE_SIZE)] == 0:
                     ent['y'] = new_ent_y
                     
-            elif dist <= 35:
+            elif dist <= 45: 
                 if attack_cooldown == 0:
-                    damage = 25 if ent['type'] == 'boss' else 15
+                    damage = 30 if ent['type'] == 'boss' else 10
                     if player_armor > 0:
                         player_armor -= damage
                         if player_armor < 0:
@@ -432,7 +443,6 @@ def draw_player_ui():
         
         barrel_poly = [(gun_x - 40, gun_y), (gun_x - 20, gun_y - 200), (gun_x + 20, gun_y - 200), (gun_x + 40, gun_y)]
         pygame.draw.polygon(view_surface, (40, 40, 40), barrel_poly)
-        
         core_poly = [(gun_x - 10, gun_y - 50), (gun_x - 5, gun_y - 150), (gun_x + 5, gun_y - 150), (gun_x + 10, gun_y - 50)]
         pygame.draw.polygon(view_surface, (0, 150, 200), core_poly)
         
@@ -459,23 +469,56 @@ def draw_doom_hud():
     screen.blit(font_huge.render(f"{player_health}%", True, red_txt), (330, VIEW_HEIGHT + 35))
     screen.blit(font_large.render("HEALTH", True, grey_txt), (330, VIEW_HEIGHT + 110))
 
-    face_rect = (WIDTH//2 - 60, VIEW_HEIGHT + 15, 120, 130)
+    # --- WAJAH EMOJI PIXELATED KOTOR (Micro-Surface Technique) ---
+    face_center_x = WIDTH // 2
+    face_center_y = VIEW_HEIGHT + 80
+    
+    face_rect = (face_center_x - 60, face_center_y - 65, 120, 130)
     pygame.draw.rect(screen, (10, 10, 10), face_rect) 
     pygame.draw.rect(screen, (60, 60, 60), face_rect, 4) 
     
     if pain_timer > 0:
         pygame.draw.rect(screen, (120, 20, 20), face_rect)
         pygame.draw.rect(screen, (60, 60, 60), face_rect, 4) 
-        pygame.draw.rect(screen, (220, 80, 80), (WIDTH//2 - 45, VIEW_HEIGHT + 30, 90, 100)) 
-        pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 - 30, VIEW_HEIGHT + 55, 20, 5)) 
-        pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 + 10, VIEW_HEIGHT + 55, 20, 5)) 
-        pygame.draw.rect(screen, (40, 0, 0), (WIDTH//2 - 20, VIEW_HEIGHT + 85, 40, 25)) 
+
+    # Canvas super kecil (28x28) untuk membuat efek kotor/jagged/pixelated
+    emoji_res = 28
+    emoji_surf = pygame.Surface((emoji_res, emoji_res), pygame.SRCALPHA)
+    
+    # Dasar Bulat Kuning (Akan terlihat pixelated setelah di-scale)
+    pygame.draw.circle(emoji_surf, (255, 215, 0), (emoji_res//2, emoji_res//2), emoji_res//2 - 1)
+    
+    if player_health <= 0:
+        # EMOJI MATI (Mata X dan Mulut Terbuka Hitam)
+        pygame.draw.line(emoji_surf, (30,30,30), (7, 8), (11, 12), 2)
+        pygame.draw.line(emoji_surf, (30,30,30), (11, 8), (7, 12), 2)
+        pygame.draw.line(emoji_surf, (30,30,30), (17, 8), (21, 12), 2)
+        pygame.draw.line(emoji_surf, (30,30,30), (21, 8), (17, 12), 2)
+        pygame.draw.rect(emoji_surf, (30,30,30), (10, 16, 8, 7))
+        pygame.draw.rect(emoji_surf, (255,255,255), (11, 16, 6, 2)) # Gigi
+    elif pain_timer > 0:
+        # EMOJI SAKIT (Mata Squint >< dan Mulut Zigzag)
         pain_timer -= 1
+        # Mata Kiri >
+        pygame.draw.line(emoji_surf, (30,30,30), (7, 8), (11, 10), 2)
+        pygame.draw.line(emoji_surf, (30,30,30), (7, 12), (11, 10), 2)
+        # Mata Kanan <
+        pygame.draw.line(emoji_surf, (30,30,30), (21, 8), (17, 10), 2)
+        pygame.draw.line(emoji_surf, (30,30,30), (21, 12), (17, 10), 2)
+        # Mulut Zigzag ~
+        pygame.draw.lines(emoji_surf, (30,30,30), False, [(7, 17), (10, 20), (14, 17), (18, 20), (21, 17)], 2)
     else:
-        pygame.draw.rect(screen, (180, 130, 90), (WIDTH//2 - 45, VIEW_HEIGHT + 30, 90, 100))
-        pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 - 25, VIEW_HEIGHT + 55, 15, 8)) 
-        pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 + 10, VIEW_HEIGHT + 55, 15, 8)) 
-        pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 - 20, VIEW_HEIGHT + 95, 40, 5)) 
+        # EMOJI NORMAL (Mata Kotak dan Melet Lidah)
+        pygame.draw.rect(emoji_surf, (30,30,30), (8, 9, 3, 4))
+        pygame.draw.rect(emoji_surf, (30,30,30), (17, 9, 3, 4))
+        pygame.draw.rect(emoji_surf, (30,30,30), (7, 17, 14, 2))
+        pygame.draw.rect(emoji_surf, (230, 100, 130), (12, 19, 5, 5))
+        pygame.draw.rect(emoji_surf, (30,30,30), (14, 19, 1, 3))
+
+    # Perbesar kanvas kecil ke ukuran HUD (Efek Pixel Art Kasar)
+    scaled_emoji = pygame.transform.scale(emoji_surf, (96, 96))
+    screen.blit(scaled_emoji, (face_center_x - 48, face_center_y - 48))
+    # ---------------------------------------------------------------
 
     screen.blit(font_huge.render(f"{player_armor}%", True, red_txt), (WIDTH//2 + 170, VIEW_HEIGHT + 35))
     screen.blit(font_large.render("ARMOR", True, grey_txt), (WIDTH//2 + 150, VIEW_HEIGHT + 110))
@@ -485,6 +528,21 @@ def draw_doom_hud():
     for i in range(4):
         screen.blit(font_small.render(ammo_types[i], True, grey_txt), (WIDTH - 250, VIEW_HEIGHT + 25 + i * 30))
         screen.blit(font_small.render(ammo_values[i], True, red_txt), (WIDTH - 150, VIEW_HEIGHT + 25 + i * 30))
+
+
+# =================================================================================
+# === SISTEM AUDIO (HAPUS BLOK BAWAH INI SAAT MEREKAM VIDEO, GAME TETAP AMAN) ===
+# =================================================================================
+pygame.mixer.init()
+try:
+    if os.path.exists('shoot.wav'): shoot_sfx = pygame.mixer.Sound('shoot.wav')
+    if os.path.exists('hurt.wav'): hurt_sfx = pygame.mixer.Sound('hurt.wav')
+    if os.path.exists('rat.wav'): rat_sfx = pygame.mixer.Sound('rat.wav')
+    if os.path.exists('boss.wav'): boss_sfx = pygame.mixer.Sound('boss.wav')
+except:
+    pass
+# =================================================================================
+
 
 # --- 4. GAME LOOP ---
 running = True
@@ -590,14 +648,13 @@ while running:
         s.set_alpha(180) 
         s.fill((150, 0, 0)) 
         screen.blit(s, (0,0))
-        screen.blit(font_huge.render("SLAIN BY THE RAT KING", True, (255, 255, 255)), (WIDTH//2 - 350, VIEW_HEIGHT//2 - 45))
+        screen.blit(font_huge.render("SLAIN BY THE CORRUPTION", True, (255, 255, 255)), (WIDTH//2 - 400, VIEW_HEIGHT//2 - 45))
         screen.blit(font_large.render(f"FINAL KILLS: {kill_count}", True, (255, 255, 0)), (WIDTH//2 - 100, VIEW_HEIGHT//2 + 40))
 
     pygame.draw.circle(screen, (0, 255, 0), (WIDTH // 2, VIEW_HEIGHT // 2), 2)
     
     pygame.display.flip()  
     clock.tick(60)         
-
 pygame.mouse.set_visible(True)
 pygame.event.set_grab(False)
 pygame.quit()
