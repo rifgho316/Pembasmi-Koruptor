@@ -4,7 +4,6 @@ import sys
 import random
 import os
 
-# --- INISIALISASI DASAR ---
 pygame.init()
 pygame.font.init()
 
@@ -21,13 +20,11 @@ HUD_HEIGHT = 160
 VIEW_HEIGHT = HEIGHT - HUD_HEIGHT
 view_surface = pygame.Surface((WIDTH, VIEW_HEIGHT))
 
-# Variabel Suara dikosongkan agar aman dari error saat kamu merekam video penghapusan
 shoot_sfx = None
 hurt_sfx = None
 rat_sfx = None
 boss_sfx = None
 
-# --- 1. PETA GAME ---
 world_map = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
@@ -59,7 +56,6 @@ game_over = False
 kill_count = 0 
 boss_spawn_counter = 0 
 
-# --- 3. STATUS SENJATA & RELOAD (MAGASIN 12) ---
 has_weapon = False       
 max_mag = 12
 current_mag = 12
@@ -170,7 +166,6 @@ def render_sprites():
             hover = math.sin(pygame.time.get_ticks() * 0.005) * 5
             rect = pygame.Rect(screen_x - size / 4, item_y + hover, size / 2, size / 2)
             
-            # --- DESAIN SPRITE ITEM & DROP BARU ---
             if cat == 'item': 
                 # Pistol Emas Pertama
                 pygame.draw.rect(view_surface, apply_fog((255, 215, 0), intensity), rect) 
@@ -481,44 +476,34 @@ def draw_doom_hud():
         pygame.draw.rect(screen, (120, 20, 20), face_rect)
         pygame.draw.rect(screen, (60, 60, 60), face_rect, 4) 
 
-    # Canvas super kecil (28x28) untuk membuat efek kotor/jagged/pixelated
     emoji_res = 28
     emoji_surf = pygame.Surface((emoji_res, emoji_res), pygame.SRCALPHA)
     
-    # Dasar Bulat Kuning (Akan terlihat pixelated setelah di-scale)
     pygame.draw.circle(emoji_surf, (255, 215, 0), (emoji_res//2, emoji_res//2), emoji_res//2 - 1)
     
     if player_health <= 0:
-        # EMOJI MATI (Mata X dan Mulut Terbuka Hitam)
         pygame.draw.line(emoji_surf, (30,30,30), (7, 8), (11, 12), 2)
         pygame.draw.line(emoji_surf, (30,30,30), (11, 8), (7, 12), 2)
         pygame.draw.line(emoji_surf, (30,30,30), (17, 8), (21, 12), 2)
         pygame.draw.line(emoji_surf, (30,30,30), (21, 8), (17, 12), 2)
         pygame.draw.rect(emoji_surf, (30,30,30), (10, 16, 8, 7))
-        pygame.draw.rect(emoji_surf, (255,255,255), (11, 16, 6, 2)) # Gigi
+        pygame.draw.rect(emoji_surf, (255,255,255), (11, 16, 6, 2))
     elif pain_timer > 0:
-        # EMOJI SAKIT (Mata Squint >< dan Mulut Zigzag)
         pain_timer -= 1
-        # Mata Kiri >
         pygame.draw.line(emoji_surf, (30,30,30), (7, 8), (11, 10), 2)
         pygame.draw.line(emoji_surf, (30,30,30), (7, 12), (11, 10), 2)
-        # Mata Kanan <
         pygame.draw.line(emoji_surf, (30,30,30), (21, 8), (17, 10), 2)
         pygame.draw.line(emoji_surf, (30,30,30), (21, 12), (17, 10), 2)
-        # Mulut Zigzag ~
         pygame.draw.lines(emoji_surf, (30,30,30), False, [(7, 17), (10, 20), (14, 17), (18, 20), (21, 17)], 2)
     else:
-        # EMOJI NORMAL (Mata Kotak dan Melet Lidah)
         pygame.draw.rect(emoji_surf, (30,30,30), (8, 9, 3, 4))
         pygame.draw.rect(emoji_surf, (30,30,30), (17, 9, 3, 4))
         pygame.draw.rect(emoji_surf, (30,30,30), (7, 17, 14, 2))
         pygame.draw.rect(emoji_surf, (230, 100, 130), (12, 19, 5, 5))
         pygame.draw.rect(emoji_surf, (30,30,30), (14, 19, 1, 3))
 
-    # Perbesar kanvas kecil ke ukuran HUD (Efek Pixel Art Kasar)
     scaled_emoji = pygame.transform.scale(emoji_surf, (96, 96))
     screen.blit(scaled_emoji, (face_center_x - 48, face_center_y - 48))
-    # ---------------------------------------------------------------
 
     screen.blit(font_huge.render(f"{player_armor}%", True, red_txt), (WIDTH//2 + 170, VIEW_HEIGHT + 35))
     screen.blit(font_large.render("ARMOR", True, grey_txt), (WIDTH//2 + 150, VIEW_HEIGHT + 110))
@@ -529,10 +514,6 @@ def draw_doom_hud():
         screen.blit(font_small.render(ammo_types[i], True, grey_txt), (WIDTH - 250, VIEW_HEIGHT + 25 + i * 30))
         screen.blit(font_small.render(ammo_values[i], True, red_txt), (WIDTH - 150, VIEW_HEIGHT + 25 + i * 30))
 
-
-# =================================================================================
-# === SISTEM AUDIO (HAPUS BLOK BAWAH INI SAAT MEREKAM VIDEO, GAME TETAP AMAN) ===
-# =================================================================================
 pygame.mixer.init()
 try:
     if os.path.exists('shoot.wav'): shoot_sfx = pygame.mixer.Sound('shoot.wav')
@@ -541,10 +522,7 @@ try:
     if os.path.exists('boss.wav'): boss_sfx = pygame.mixer.Sound('boss.wav')
 except:
     pass
-# =================================================================================
-
-
-# --- 4. GAME LOOP ---
+    
 running = True
 while running:
     if player_health <= 0: game_over = True
