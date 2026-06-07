@@ -23,9 +23,7 @@ Game ini awalnya dibuat sebagai bahan eksperimen untuk konten video *reverse cod
 
 ## 🛠️ Cara Instalasi & Bermain
 1. Pastikan kamu sudah menginstal [Python](https://www.python.org/downloads/) di komputermu.
-2. *Clone* repositori ini ke komputer kamu:
+2. Instal library Pygame melalui terminal/CMD: pip install pygame
+3. *Clone* repositori ini ke komputer kamu:
 ```bash
    git clone [[https://github.com/USERNAME_KAMU/NAMA_REPO_KAMU.git](https://github.com/rifgho316/Pembasmi-Koruptor)]([https://github.com/USERNAME_KAMU/NAMA_REPO_KAMU.git](https://github.com/rifgho316/Pembasmi-Koruptor))
-
-
-Instal library Pygame melalui terminal/CMD: pip install pygame
