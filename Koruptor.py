@@ -10,7 +10,7 @@ pygame.font.init()
 WIDTH = 1280
 HEIGHT = 720
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Retro FPS - Custom Sprites & Dynamic Emoji")
+pygame.display.set_caption("FPS Retro - Sprite Kustom & Emoji Dinamis")
 clock = pygame.time.Clock()
 
 pygame.mouse.set_visible(False)
@@ -39,7 +39,6 @@ TILE_SIZE = 64
 MAP_WIDTH = len(world_map[0]) * TILE_SIZE
 MAP_HEIGHT = len(world_map) * TILE_SIZE
 
-# --- 2. PEMAIN ---
 player_x = 96.0 
 player_y = 96.0
 player_angle = 0.0
@@ -167,23 +166,18 @@ def render_sprites():
             rect = pygame.Rect(screen_x - size / 4, item_y + hover, size / 2, size / 2)
             
             if cat == 'item': 
-                # Pistol Emas Pertama
                 pygame.draw.rect(view_surface, apply_fog((255, 215, 0), intensity), rect) 
-                
             elif cat == 'ammo': 
-                # Kotak Amunisi Militer (Hijau Tua dengan ujung peluru)
                 box_color = apply_fog((60, 70, 50), intensity)
                 stripe_color = apply_fog((200, 30, 30), intensity)
                 bullet_tip = apply_fog((255, 215, 0), intensity)
                 
                 pygame.draw.rect(view_surface, box_color, rect)
                 pygame.draw.rect(view_surface, stripe_color, (rect.x, rect.y + size*0.2, rect.width, size*0.15))
-                # 3 Peluru menyembul di atas
                 for i in range(3):
                     pygame.draw.rect(view_surface, bullet_tip, (rect.x + size*0.08 + i*size*0.15, rect.y - size*0.1, size*0.08, size*0.1))
 
             elif cat == 'armor': 
-                # Perisai / Armor (Bentuk Shield)
                 shield_blue = apply_fog((30, 100, 200), intensity)
                 shield_border = apply_fog((180, 180, 180), intensity)
                 
@@ -196,11 +190,9 @@ def render_sprites():
                 ]
                 pygame.draw.polygon(view_surface, shield_blue, shield_poly)
                 pygame.draw.polygon(view_surface, shield_border, shield_poly, max(2, int(size*0.04)))
-                # Garis silang di tengah perisai
                 pygame.draw.line(view_surface, shield_border, (screen_x, item_y + hover - size*0.1), (screen_x, item_y + hover + size*0.4), max(1, int(size*0.04)))
 
             elif cat == 'health': 
-                # Medkit Putih
                 med_white = apply_fog((220, 220, 220), intensity)
                 med_red = apply_fog((200, 30, 30), intensity)
                 pygame.draw.rect(view_surface, med_white, rect)
@@ -414,7 +406,6 @@ def update_entities_and_collision():
 
                     pain_timer = 20
                     attack_cooldown = 60
-                    if hurt_sfx: hurt_sfx.play()
                     if player_health <= 0: player_health = 0
 
     entities[:] = [e for e in entities if e['active']]
@@ -459,12 +450,11 @@ def draw_doom_hud():
 
     ammo_text = f"{current_mag}/{reserve_ammo}" if has_weapon else "0"
     screen.blit(font_huge.render(ammo_text, True, red_txt), (80, VIEW_HEIGHT + 35))
-    screen.blit(font_large.render("AMMO", True, grey_txt), (90, VIEW_HEIGHT + 110))
+    screen.blit(font_large.render("PELURU", True, grey_txt), (90, VIEW_HEIGHT + 110))
 
     screen.blit(font_huge.render(f"{player_health}%", True, red_txt), (330, VIEW_HEIGHT + 35))
-    screen.blit(font_large.render("HEALTH", True, grey_txt), (330, VIEW_HEIGHT + 110))
+    screen.blit(font_large.render("NYAWA", True, grey_txt), (330, VIEW_HEIGHT + 110))
 
-    # --- WAJAH EMOJI PIXELATED KOTOR (Micro-Surface Technique) ---
     face_center_x = WIDTH // 2
     face_center_y = VIEW_HEIGHT + 80
     
@@ -487,7 +477,7 @@ def draw_doom_hud():
         pygame.draw.line(emoji_surf, (30,30,30), (17, 8), (21, 12), 2)
         pygame.draw.line(emoji_surf, (30,30,30), (21, 8), (17, 12), 2)
         pygame.draw.rect(emoji_surf, (30,30,30), (10, 16, 8, 7))
-        pygame.draw.rect(emoji_surf, (255,255,255), (11, 16, 6, 2))
+        pygame.draw.rect(emoji_surf, (255,255,255), (11, 16, 6, 2)) 
     elif pain_timer > 0:
         pain_timer -= 1
         pygame.draw.line(emoji_surf, (30,30,30), (7, 8), (11, 10), 2)
@@ -506,9 +496,9 @@ def draw_doom_hud():
     screen.blit(scaled_emoji, (face_center_x - 48, face_center_y - 48))
 
     screen.blit(font_huge.render(f"{player_armor}%", True, red_txt), (WIDTH//2 + 170, VIEW_HEIGHT + 35))
-    screen.blit(font_large.render("ARMOR", True, grey_txt), (WIDTH//2 + 150, VIEW_HEIGHT + 110))
+    screen.blit(font_large.render("TAMENG", True, grey_txt), (WIDTH//2 + 150, VIEW_HEIGHT + 110))
 
-    ammo_types = ["MAG", "RSV", "RCKT", "CELL"]
+    ammo_types = ["MAG", "SISA", "ROKET", "SEL"]
     ammo_values = [str(current_mag), str(reserve_ammo), " 0", " 0"]
     for i in range(4):
         screen.blit(font_small.render(ammo_types[i], True, grey_txt), (WIDTH - 250, VIEW_HEIGHT + 25 + i * 30))
@@ -522,7 +512,7 @@ try:
     if os.path.exists('boss.wav'): boss_sfx = pygame.mixer.Sound('boss.wav')
 except:
     pass
-    
+
 running = True
 while running:
     if player_health <= 0: game_over = True
@@ -597,6 +587,24 @@ while running:
                         player_health = min(100, player_health + 80) 
 
         update_entities_and_collision()
+        
+        min_rat_dist = 9999
+        min_boss_dist = 9999
+        for ent in entities:
+            if ent['active']:
+                d = math.hypot(player_x - ent['x'], player_y - ent['y'])
+                if ent['type'] == 'monster' and d < min_rat_dist: min_rat_dist = d
+                if ent['type'] == 'boss' and d < min_boss_dist: min_boss_dist = d
+
+        if rat_sound_timer == 0 and min_rat_dist < MAX_DEPTH and rat_sfx:
+            rat_sfx.set_volume(max(0.0, 1.0 - (min_rat_dist / MAX_DEPTH)))
+            rat_sfx.play()
+            rat_sound_timer = 90
+
+        if boss_sound_timer == 0 and min_boss_dist < MAX_DEPTH and boss_sfx:
+            boss_sfx.set_volume(max(0.0, 1.0 - (min_boss_dist / MAX_DEPTH)))
+            boss_sfx.play()
+            boss_sound_timer = 150
 
     view_surface.fill((0, 0, 0)) 
     cast_rays()         
@@ -612,27 +620,28 @@ while running:
     
     draw_doom_hud()       
     
-    screen.blit(font_large.render(f"KILLS: {kill_count}", True, (255, 0, 0)), (20, 20))
+    screen.blit(font_large.render(f"DIBASMI: {kill_count}", True, (255, 0, 0)), (20, 20))
     
     if reload_timer > 0:
-        screen.blit(font_large.render("RELOADING...", True, (255, 255, 0)), (WIDTH//2 - 90, VIEW_HEIGHT//2 + 50))
+        screen.blit(font_large.render("MENGISI PELURU...", True, (255, 255, 0)), (WIDTH//2 - 120, VIEW_HEIGHT//2 + 50))
     elif has_weapon and current_mag == 0 and reserve_ammo > 0:
-        screen.blit(font_large.render("PRESS 'R' TO RELOAD", True, (255, 0, 0)), (WIDTH//2 - 140, VIEW_HEIGHT//2 + 50))
+        screen.blit(font_large.render("TEKAN 'R' UNTUK MENGISI PELURU", True, (255, 0, 0)), (WIDTH//2 - 200, VIEW_HEIGHT//2 + 50))
     elif has_weapon and current_mag == 0 and reserve_ammo == 0:
-        screen.blit(font_large.render("OUT OF AMMO!", True, (255, 0, 0)), (WIDTH//2 - 100, VIEW_HEIGHT//2 + 50))
+        screen.blit(font_large.render("PELURU HABIS!", True, (255, 0, 0)), (WIDTH//2 - 100, VIEW_HEIGHT//2 + 50))
 
     if game_over:
         s = pygame.Surface((WIDTH, VIEW_HEIGHT)) 
         s.set_alpha(180) 
         s.fill((150, 0, 0)) 
         screen.blit(s, (0,0))
-        screen.blit(font_huge.render("SLAIN BY THE CORRUPTION", True, (255, 255, 255)), (WIDTH//2 - 400, VIEW_HEIGHT//2 - 45))
-        screen.blit(font_large.render(f"FINAL KILLS: {kill_count}", True, (255, 255, 0)), (WIDTH//2 - 100, VIEW_HEIGHT//2 + 40))
+        screen.blit(font_huge.render("TUMBANG OLEH KORUPSI", True, (255, 255, 255)), (WIDTH//2 - 380, VIEW_HEIGHT//2 - 45))
+        screen.blit(font_large.render(f"TOTAL DIBASMI: {kill_count}", True, (255, 255, 0)), (WIDTH//2 - 120, VIEW_HEIGHT//2 + 40))
 
     pygame.draw.circle(screen, (0, 255, 0), (WIDTH // 2, VIEW_HEIGHT // 2), 2)
     
     pygame.display.flip()  
     clock.tick(60)         
+
 pygame.mouse.set_visible(True)
 pygame.event.set_grab(False)
 pygame.quit()
