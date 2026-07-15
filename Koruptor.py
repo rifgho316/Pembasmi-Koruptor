@@ -26,48 +26,72 @@ rat_sfx = None
 boss_sfx = None
 
 # --- SISTEM STAGE ---
-# Setiap stage punya denah (obstacle) sendiri, tingkat kesulitan sendiri,
-# dan palet warna sendiri supaya terasa berbeda secara visual.
+# Setiap stage sekarang berupa peta "open world": area luas dan terbuka
+# dengan gerombolan obstacle (reruntuhan/bangunan) tersebar, bukan lorong sempit.
 STAGE_MAPS = [
-    # STAGE 1 - Gedung Dewan (denah awal, ruang lebih terbuka)
+    # STAGE 1 - Gedung Dewan (halaman terbuka, sedikit reruntuhan)
     [
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-        [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-        [1,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1],
-        [1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
-        [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-        [1,0,0,0,1,0,1,1,1,0,0,1,0,0,0,1],
-        [1,0,1,0,1,0,0,0,1,0,0,1,1,1,0,1],
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,0,1],
+        [1,0,0,0,1,1,1,0,0,0,0,1,0,0,0,0,1,0,0,1],
+        [1,0,1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,0,1],
+        [1,0,0,1,0,0,0,1,1,1,0,0,0,0,0,0,1,1,0,1],
+        [1,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
-    # STAGE 2 - Pabrik Gelap (lebih banyak sekat & lorong sempit)
+    # STAGE 2 - Pabrik Gelap (kompleks luas dengan gudang tersebar)
     [
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-        [1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
-        [1,0,1,1,0,1,0,1,0,1,0,1,0,1,1,1],
-        [1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
-        [1,1,1,0,1,1,0,1,1,1,0,1,1,0,1,1],
-        [1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1],
-        [1,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1],
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,1,1,1,0,1,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,0,1],
+        [1,0,0,0,0,0,0,0,1,0,1,0,0,1,1,0,1,0,0,1,0,1],
+        [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1],
+        [1,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+        [1,0,0,0,0,0,0,1,0,0,1,1,1,0,0,0,0,0,1,0,0,1],
+        [1,0,0,1,0,0,0,1,0,0,0,1,1,1,1,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
-    # STAGE 3 - Sarang Korupsi (maze padat, ruang gerak paling sempit)
+    # STAGE 3 - Sarang Korupsi (kawasan paling luas, reruntuhan padat di beberapa titik)
     [
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-        [1,0,1,0,0,1,0,0,0,1,0,0,1,0,0,1],
-        [1,0,1,0,1,1,0,1,0,1,0,1,1,0,1,1],
-        [1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,1],
-        [1,1,0,1,1,0,1,1,0,1,1,1,0,1,1,1],
-        [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-        [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1],
-        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,0,0,0,0,0,1],
+        [1,0,0,1,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,1,0,0,0,1],
+        [1,0,1,0,0,0,0,0,0,0,1,1,0,0,1,0,0,0,1,1,0,0,0,1],
+        [1,0,1,0,0,0,0,0,0,1,1,1,0,0,1,0,0,0,1,1,0,1,1,1],
+        [1,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,0,0,0,1],
+        [1,0,0,0,0,1,1,1,0,0,0,1,0,1,0,0,0,0,1,1,1,0,0,1],
+        [1,0,0,0,1,1,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,1],
+        [1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+        [1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
 ]
 
 STAGES = [
     {
         'name': 'STAGE 1 - GEDUNG DEWAN',
-        'monster_count': 5,
+        'monster_count': 7,
         'monster_hp': 2,
         'monster_speed': 1.6,
         'boss_hp': 20,
@@ -77,7 +101,7 @@ STAGES = [
     },
     {
         'name': 'STAGE 2 - PABRIK GELAP',
-        'monster_count': 8,
+        'monster_count': 11,
         'monster_hp': 3,
         'monster_speed': 2.0,
         'boss_hp': 35,
@@ -87,7 +111,7 @@ STAGES = [
     },
     {
         'name': 'STAGE 3 - SARANG KORUPSI',
-        'monster_count': 12,
+        'monster_count': 16,
         'monster_hp': 4,
         'monster_speed': 2.4,
         'boss_hp': 55,
@@ -108,7 +132,54 @@ player_y = 96.0
 player_angle = 0.0
 FOV = math.pi / 3  
 SPEED = 4.0        
-MOUSE_SENSITIVITY = 0.002 
+
+# --- PENGATURAN (SETTINGS) ---
+# Semua nilai bisa diubah lewat menu Pengaturan (tekan ESC saat bermain).
+SENSITIVITY_LEVELS = [
+    {'label': 'RENDAH',  'value': 0.0010},
+    {'label': 'SEDANG',  'value': 0.0020},
+    {'label': 'TINGGI',  'value': 0.0032},
+    {'label': 'SANGAT TINGGI', 'value': 0.0048},
+]
+GRAPHICS_LEVELS = [
+    {'label': 'RENDAH (RETRO)', 'pixel_scale': 10},
+    {'label': 'SEDANG',         'pixel_scale': 6},
+    {'label': 'TINGGI',         'pixel_scale': 3},
+    {'label': 'ULTRA (HALUS)',  'pixel_scale': 1},
+]
+
+sensitivity_index = 1     # default SEDANG
+graphics_index = 1        # default SEDANG
+sfx_volume_index = 8      # 0-10, default 80%
+music_volume_index = 8    # 0-10, cadangan untuk musik latar (jika ada)
+
+def get_sensitivity():
+    return SENSITIVITY_LEVELS[sensitivity_index]['value']
+
+def get_pixel_scale():
+    return GRAPHICS_LEVELS[graphics_index]['pixel_scale']
+
+def get_sfx_volume():
+    return sfx_volume_index / 10.0
+
+def apply_volume_to_sounds():
+    vol = get_sfx_volume()
+    for snd in (shoot_sfx, hurt_sfx, rat_sfx, boss_sfx):
+        if snd:
+            snd.set_volume(vol)
+
+def adjust_setting(selection, direction):
+    """Ubah nilai pengaturan pada baris menu yang sedang dipilih."""
+    global sensitivity_index, graphics_index, sfx_volume_index
+    if selection == 0:
+        sensitivity_index = max(0, min(len(SENSITIVITY_LEVELS) - 1, sensitivity_index + direction))
+    elif selection == 1:
+        graphics_index = max(0, min(len(GRAPHICS_LEVELS) - 1, graphics_index + direction))
+    elif selection == 2:
+        sfx_volume_index = max(0, min(10, sfx_volume_index + direction))
+        apply_volume_to_sounds()
+
+MOUSE_SENSITIVITY = get_sensitivity()
 
 player_health = 100
 player_armor = 0    
@@ -124,6 +195,11 @@ stage_state = 'PLAYING'    # PLAYING -> BOSS -> CLEAR -> (next stage) / VICTORY
 stage_banner_timer = 150   # nampilkan nama stage di awal
 stage_clear_timer = 0      # jeda sebelum pindah ke stage berikutnya
 
+# --- STATE MENU PAUSE/PENGATURAN ---
+paused = False
+menu_selection = 0
+MENU_ITEMS = ['SENSITIVITAS MOUSE', 'KUALITAS GRAFIS', 'VOLUME SUARA', 'LANJUTKAN', 'KELUAR']
+
 has_weapon = False       
 max_mag = 12
 current_mag = 12
@@ -131,7 +207,7 @@ reserve_ammo = 24
 reload_timer = 0
 RELOAD_TIME = 60 
 
-MAX_DEPTH = 450.0 
+MAX_DEPTH = 900.0 
 rat_sound_timer = 0 
 boss_sound_timer = 0
 
@@ -182,11 +258,11 @@ def load_stage(idx):
     new_entities = []
     # Pickup senjata hanya muncul di stage pertama
     if idx == 0:
-        gx, gy = find_open_tile(min_dist_from_player=150)
+        gx, gy = find_open_tile(min_dist_from_player=200)
         new_entities.append({'id': 'gun_pickup', 'type': 'item', 'x': gx, 'y': gy, 'active': True})
 
     for i in range(cfg['monster_count']):
-        mx, my = find_open_tile(min_dist_from_player=250)
+        mx, my = find_open_tile(min_dist_from_player=350)
         new_entities.append({
             'id': f'mon_{idx}_{i}', 'type': 'monster', 'x': mx, 'y': my,
             'active': True, 'hp': cfg['monster_hp'], 'speed': cfg['monster_speed'],
@@ -424,12 +500,12 @@ def update_entities_and_collision():
             if ent['type'] == 'boss' and d < min_boss_dist: min_boss_dist = d
 
     if rat_sound_timer == 0 and min_rat_dist < MAX_DEPTH and rat_sfx:
-        rat_sfx.set_volume(max(0.0, 1.0 - (min_rat_dist / MAX_DEPTH)))
+        rat_sfx.set_volume(max(0.0, 1.0 - (min_rat_dist / MAX_DEPTH)) * get_sfx_volume())
         rat_sfx.play()
         rat_sound_timer = 90
 
     if boss_sound_timer == 0 and min_boss_dist < MAX_DEPTH and boss_sfx:
-        boss_sfx.set_volume(max(0.0, 1.0 - (min_boss_dist / MAX_DEPTH)))
+        boss_sfx.set_volume(max(0.0, 1.0 - (min_boss_dist / MAX_DEPTH)) * get_sfx_volume())
         boss_sfx.play()
         boss_sound_timer = 150 
 
@@ -553,6 +629,40 @@ def draw_player_ui():
             pygame.draw.circle(view_surface, (255, 100, 0), (gun_x, flash_y), 15)
             muzzle_flash_timer -= 1
 
+def draw_pause_menu():
+    """Menu jeda: navigasi dengan W/S atau panah atas-bawah,
+    ubah nilai dengan A/D atau panah kiri-kanan, ENTER untuk konfirmasi."""
+    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay.set_alpha(210)
+    overlay.fill((10, 10, 15))
+    screen.blit(overlay, (0, 0))
+
+    title = font_stage.render("JEDA / PENGATURAN", True, (255, 255, 255))
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 90))
+
+    values = [
+        SENSITIVITY_LEVELS[sensitivity_index]['label'],
+        GRAPHICS_LEVELS[graphics_index]['label'],
+        f"{sfx_volume_index * 10}%",
+        '',
+        '',
+    ]
+
+    start_y = 220
+    row_h = 60
+    for i, label in enumerate(MENU_ITEMS):
+        is_selected = (i == menu_selection)
+        color = (255, 220, 100) if is_selected else (200, 200, 200)
+        prefix = "> " if is_selected else "   "
+        line = f"{prefix}{label}"
+        if values[i]:
+            line += f"   <  {values[i]}  >" if is_selected else f"      {values[i]}"
+        txt = font_large.render(line, True, color)
+        screen.blit(txt, (WIDTH//2 - 280, start_y + i * row_h))
+
+    hint = font_small.render("W/S pilih baris • A/D ubah nilai • ENTER konfirmasi • ESC lanjut", True, (150, 150, 150))
+    screen.blit(hint, (WIDTH//2 - hint.get_width()//2, start_y + len(MENU_ITEMS) * row_h + 30))
+
 def draw_doom_hud():
     global pain_timer
     
@@ -569,6 +679,16 @@ def draw_doom_hud():
 
     screen.blit(font_huge.render(f"{player_health}%", True, red_txt), (330, VIEW_HEIGHT + 35))
     screen.blit(font_large.render("NYAWA", True, grey_txt), (330, VIEW_HEIGHT + 110))
+
+    # --- HEALTH BAR ---
+    hb_x, hb_y, hb_w, hb_h = 330, VIEW_HEIGHT + 8, 170, 16
+    pygame.draw.rect(screen, (10, 10, 10), (hb_x - 2, hb_y - 2, hb_w + 4, hb_h + 4))
+    hp_ratio = max(0, min(1, player_health / 100))
+    if hp_ratio > 0.6: hp_color = (60, 200, 60)
+    elif hp_ratio > 0.3: hp_color = (230, 200, 40)
+    else: hp_color = (220, 40, 40)
+    pygame.draw.rect(screen, hp_color, (hb_x, hb_y, int(hb_w * hp_ratio), hb_h))
+    pygame.draw.rect(screen, (90, 90, 90), (hb_x, hb_y, hb_w, hb_h), 2)
 
     face_center_x = WIDTH // 2
     face_center_y = VIEW_HEIGHT + 80
@@ -613,6 +733,13 @@ def draw_doom_hud():
     screen.blit(font_huge.render(f"{player_armor}%", True, red_txt), (WIDTH//2 + 170, VIEW_HEIGHT + 35))
     screen.blit(font_large.render("TAMENG", True, grey_txt), (WIDTH//2 + 150, VIEW_HEIGHT + 110))
 
+    # --- ARMOR BAR ---
+    ab_x, ab_y, ab_w, ab_h = WIDTH//2 + 170, VIEW_HEIGHT + 8, 170, 16
+    pygame.draw.rect(screen, (10, 10, 10), (ab_x - 2, ab_y - 2, ab_w + 4, ab_h + 4))
+    ar_ratio = max(0, min(1, player_armor / 100))
+    pygame.draw.rect(screen, (40, 120, 220), (ab_x, ab_y, int(ab_w * ar_ratio), ab_h))
+    pygame.draw.rect(screen, (90, 90, 90), (ab_x, ab_y, ab_w, ab_h), 2)
+
     ammo_types = ["MAG", "SISA", "ROKET", "SEL"]
     ammo_values = [str(current_mag), str(reserve_ammo), " 0", " 0"]
     for i in range(4):
@@ -627,6 +754,7 @@ try:
     if os.path.exists('boss.wav'): boss_sfx = pygame.mixer.Sound('boss.wav')
 except:
     pass
+apply_volume_to_sounds()
 
 load_stage(current_stage)
 
@@ -648,8 +776,34 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT: running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                if stage_state not in ('CLEAR', 'VICTORY'):
+                    paused = not paused
+                    pygame.mouse.set_visible(paused)
+                    pygame.event.set_grab(not paused)
+                    if paused:
+                        menu_selection = 0
+
+            elif paused:
+                if event.key in (pygame.K_w, pygame.K_UP):
+                    menu_selection = (menu_selection - 1) % len(MENU_ITEMS)
+                elif event.key in (pygame.K_s, pygame.K_DOWN):
+                    menu_selection = (menu_selection + 1) % len(MENU_ITEMS)
+                elif event.key in (pygame.K_a, pygame.K_LEFT):
+                    adjust_setting(menu_selection, -1)
+                elif event.key in (pygame.K_d, pygame.K_RIGHT):
+                    adjust_setting(menu_selection, 1)
+                elif event.key == pygame.K_RETURN:
+                    if menu_selection == 3:      # LANJUTKAN
+                        paused = False
+                        pygame.mouse.set_visible(False)
+                        pygame.event.set_grab(True)
+                    elif menu_selection == 4:    # KELUAR
+                        running = False
         
-        if event.type == pygame.MOUSEBUTTONDOWN and not game_over and stage_state in ('PLAYING', 'BOSS'):
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over and not paused and stage_state in ('PLAYING', 'BOSS'):
             if event.button == 1 and has_weapon and current_mag > 0 and recoil_timer == 0 and reload_timer == 0:
                 current_mag -= 1 
                 recoil_timer = 15       
@@ -671,14 +825,16 @@ while running:
                 stage_state = 'VICTORY'
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_ESCAPE]: running = False
 
-    if not game_over and stage_state in ('PLAYING', 'BOSS'):
+    if paused:
+        pygame.mouse.get_rel()  # buang delta mouse supaya kamera tidak melompat saat resume
+
+    if not paused and not game_over and stage_state in ('PLAYING', 'BOSS'):
         if keys[pygame.K_r] and has_weapon and current_mag < max_mag and reserve_ammo > 0 and reload_timer == 0:
             reload_timer = RELOAD_TIME
 
         mouse_dx, mouse_dy = pygame.mouse.get_rel()
-        player_angle += mouse_dx * MOUSE_SENSITIVITY
+        player_angle += mouse_dx * get_sensitivity()
 
         move_x = move_y = 0
         if keys[pygame.K_w]:
@@ -722,8 +878,8 @@ while running:
     render_sprites()      
     draw_player_ui()      
     
-    PIXEL_SCALE = 6 
-    small_view = pygame.transform.scale(view_surface, (WIDTH // PIXEL_SCALE, VIEW_HEIGHT // PIXEL_SCALE))
+    PIXEL_SCALE = get_pixel_scale() 
+    small_view = pygame.transform.scale(view_surface, (max(1, WIDTH // PIXEL_SCALE), max(1, VIEW_HEIGHT // PIXEL_SCALE)))
     pixelated_view = pygame.transform.scale(small_view, (WIDTH, VIEW_HEIGHT))
     
     screen.fill((0, 0, 0))
@@ -733,16 +889,26 @@ while running:
     
     screen.blit(font_large.render(f"DIBASMI: {kill_count}", True, (255, 0, 0)), (20, 20))
     screen.blit(font_small.render(STAGES[current_stage]['name'], True, (255, 220, 100)), (20, 60))
+    screen.blit(font_small.render("ESC: Pengaturan", True, (130, 130, 130)), (WIDTH - 180, 20))
 
     if stage_state == 'PLAYING':
         sisa = max(0, STAGES[current_stage]['monster_count'] - stage_kills)
         screen.blit(font_small.render(f"MUSUH TERSISA: {sisa}", True, (200, 200, 200)), (20, 90))
     elif stage_state == 'BOSS':
         boss_hp_left = 0
+        boss_hp_max = STAGES[current_stage]['boss_hp']
         for ent in entities:
             if ent['type'] == 'boss' and ent['active']:
                 boss_hp_left = ent['hp']
-        screen.blit(font_small.render(f"BOSS MUNCUL! HP: {boss_hp_left}", True, (255, 60, 60)), (20, 90))
+
+        bar_w, bar_h = 500, 26
+        bar_x, bar_y = WIDTH//2 - bar_w//2, 25
+        pygame.draw.rect(screen, (10, 10, 10), (bar_x - 3, bar_y - 3, bar_w + 6, bar_h + 6))
+        ratio = max(0, min(1, boss_hp_left / boss_hp_max)) if boss_hp_max else 0
+        pygame.draw.rect(screen, (200, 20, 20), (bar_x, bar_y, int(bar_w * ratio), bar_h))
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_w, bar_h), 2)
+        label = font_small.render("THE RAT KING", True, (255, 220, 220))
+        screen.blit(label, (WIDTH//2 - label.get_width()//2, bar_y - 24))
 
     if reload_timer > 0:
         screen.blit(font_large.render("MENGISI PELURU...", True, (255, 255, 0)), (WIDTH//2 - 120, VIEW_HEIGHT//2 + 50))
@@ -791,6 +957,9 @@ while running:
         screen.blit(font_huge.render("TUMBANG OLEH KORUPSI", True, (255, 255, 255)), (WIDTH//2 - 380, VIEW_HEIGHT//2 - 45))
         screen.blit(font_large.render(f"Gugur di {STAGES[current_stage]['name']}", True, (255, 200, 200)), (WIDTH//2 - 150, VIEW_HEIGHT//2 + 5))
         screen.blit(font_large.render(f"TOTAL DIBASMI: {kill_count}", True, (255, 255, 0)), (WIDTH//2 - 120, VIEW_HEIGHT//2 + 40))
+
+    if paused:
+        draw_pause_menu()
 
     pygame.draw.circle(screen, (0, 255, 0), (WIDTH // 2, VIEW_HEIGHT // 2), 2)
     
