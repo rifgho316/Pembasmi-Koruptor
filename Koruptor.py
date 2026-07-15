@@ -25,17 +25,81 @@ hurt_sfx = None
 rat_sfx = None
 boss_sfx = None
 
-world_map = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1],
-    [1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
-    [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,1,0,1,1,1,0,0,1,0,0,0,1],
-    [1,0,1,0,1,0,0,0,1,0,0,1,1,1,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+# --- SISTEM STAGE ---
+# Setiap stage punya denah (obstacle) sendiri, tingkat kesulitan sendiri,
+# dan palet warna sendiri supaya terasa berbeda secara visual.
+STAGE_MAPS = [
+    # STAGE 1 - Gedung Dewan (denah awal, ruang lebih terbuka)
+    [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+        [1,0,1,1,0,0,1,0,1,1,0,0,1,1,0,1],
+        [1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+        [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,1,0,1,1,1,0,0,1,0,0,0,1],
+        [1,0,1,0,1,0,0,0,1,0,0,1,1,1,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    # STAGE 2 - Pabrik Gelap (lebih banyak sekat & lorong sempit)
+    [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+        [1,0,1,1,0,1,0,1,0,1,0,1,0,1,1,1],
+        [1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+        [1,1,1,0,1,1,0,1,1,1,0,1,1,0,1,1],
+        [1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1],
+        [1,0,1,0,0,0,1,1,0,1,0,0,0,1,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    # STAGE 3 - Sarang Korupsi (maze padat, ruang gerak paling sempit)
+    [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,1,0,0,1,0,0,0,1,0,0,1,0,0,1],
+        [1,0,1,0,1,1,0,1,0,1,0,1,1,0,1,1],
+        [1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,1],
+        [1,1,0,1,1,0,1,1,0,1,1,1,0,1,1,1],
+        [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+        [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
 ]
+
+STAGES = [
+    {
+        'name': 'STAGE 1 - GEDUNG DEWAN',
+        'monster_count': 5,
+        'monster_hp': 2,
+        'monster_speed': 1.6,
+        'boss_hp': 20,
+        'boss_speed': 0.8,
+        'wall_color': (50, 60, 50),      # hijau kusam kantor
+        'monster_tint': (1.0, 1.0, 1.0),
+    },
+    {
+        'name': 'STAGE 2 - PABRIK GELAP',
+        'monster_count': 8,
+        'monster_hp': 3,
+        'monster_speed': 2.0,
+        'boss_hp': 35,
+        'boss_speed': 1.05,
+        'wall_color': (60, 45, 30),      # coklat karat industrial
+        'monster_tint': (1.1, 0.9, 0.7),
+    },
+    {
+        'name': 'STAGE 3 - SARANG KORUPSI',
+        'monster_count': 12,
+        'monster_hp': 4,
+        'monster_speed': 2.4,
+        'boss_hp': 55,
+        'boss_speed': 1.3,
+        'wall_color': (65, 20, 20),      # merah darah, lair akhir
+        'monster_tint': (1.25, 0.55, 0.55),
+    },
+]
+TOTAL_STAGES = len(STAGES)
+
 TILE_SIZE = 64
+world_map = STAGE_MAPS[0]
 MAP_WIDTH = len(world_map[0]) * TILE_SIZE
 MAP_HEIGHT = len(world_map) * TILE_SIZE
 
@@ -52,8 +116,13 @@ pain_timer = 0
 attack_cooldown = 0
 game_over = False
 
-kill_count = 0 
-boss_spawn_counter = 0 
+kill_count = 0            # total musuh dibasmi sepanjang permainan (untuk statistik)
+current_stage = 0         # index stage aktif (0 = Stage 1)
+stage_kills = 0            # musuh biasa yang sudah dibasmi di stage ini
+boss_spawned = False       # apakah boss stage ini sudah muncul
+stage_state = 'PLAYING'    # PLAYING -> BOSS -> CLEAR -> (next stage) / VICTORY
+stage_banner_timer = 150   # nampilkan nama stage di awal
+stage_clear_timer = 0      # jeda sebelum pindah ke stage berikutnya
 
 has_weapon = False       
 max_mag = 12
@@ -63,15 +132,10 @@ reload_timer = 0
 RELOAD_TIME = 60 
 
 MAX_DEPTH = 450.0 
-spawn_timer = 0
 rat_sound_timer = 0 
 boss_sound_timer = 0
 
-entities = [
-    {'id': 'gun_pickup', 'type': 'item', 'x': 350.0, 'y': 350.0, 'active': True},
-    {'id': 'mon_1', 'type': 'monster', 'x': 400.0, 'y': 200.0, 'active': True, 'hp': 2, 'speed': 1.6, 'offset': random.random()}
-]
-
+entities = []
 bullets = []
 recoil_timer = 0
 muzzle_flash_timer = 0
@@ -79,10 +143,61 @@ muzzle_flash_timer = 0
 font_huge = pygame.font.Font(None, 90)
 font_large = pygame.font.Font(None, 40)
 font_small = pygame.font.Font(None, 28)
+font_stage = pygame.font.Font(None, 70)
 z_buffer = [0] * WIDTH
 
+def find_open_tile(min_dist_from_player=0):
+    """Cari petak kosong (0) di map, opsional jauh dari player."""
+    for _ in range(200):
+        rx = random.randint(1, len(world_map[0]) - 2)
+        ry = random.randint(1, len(world_map) - 2)
+        if world_map[ry][rx] == 0:
+            sx = rx * TILE_SIZE + TILE_SIZE / 2
+            sy = ry * TILE_SIZE + TILE_SIZE / 2
+            if min_dist_from_player <= 0 or math.hypot(sx - player_x, sy - player_y) > min_dist_from_player:
+                return sx, sy
+    return TILE_SIZE * 1.5, TILE_SIZE * 1.5
+
+def load_stage(idx):
+    """Muat ulang seluruh state dunia untuk stage ke-idx (0-based)."""
+    global world_map, MAP_WIDTH, MAP_HEIGHT, entities, bullets
+    global player_x, player_y, player_angle
+    global stage_kills, boss_spawned, stage_state, stage_banner_timer, stage_clear_timer
+
+    world_map = STAGE_MAPS[idx]
+    MAP_WIDTH = len(world_map[0]) * TILE_SIZE
+    MAP_HEIGHT = len(world_map) * TILE_SIZE
+
+    player_x, player_y = 96.0, 96.0
+    player_angle = 0.0
+
+    bullets = []
+    stage_kills = 0
+    boss_spawned = False
+    stage_state = 'PLAYING'
+    stage_banner_timer = 150
+    stage_clear_timer = 0
+
+    cfg = STAGES[idx]
+    new_entities = []
+    # Pickup senjata hanya muncul di stage pertama
+    if idx == 0:
+        gx, gy = find_open_tile(min_dist_from_player=150)
+        new_entities.append({'id': 'gun_pickup', 'type': 'item', 'x': gx, 'y': gy, 'active': True})
+
+    for i in range(cfg['monster_count']):
+        mx, my = find_open_tile(min_dist_from_player=250)
+        new_entities.append({
+            'id': f'mon_{idx}_{i}', 'type': 'monster', 'x': mx, 'y': my,
+            'active': True, 'hp': cfg['monster_hp'], 'speed': cfg['monster_speed'],
+            'offset': random.random()
+        })
+    entities = new_entities
+
 def apply_fog(color, intensity):
-    return (int(color[0] * intensity), int(color[1] * intensity), int(color[2] * intensity))
+    def c(v):
+        return max(0, min(255, int(v * intensity)))
+    return (c(color[0]), c(color[1]), c(color[2]))
 
 def cast_rays():
     pygame.draw.rect(view_surface, (5, 5, 5), (0, 0, WIDTH, VIEW_HEIGHT // 2)) 
@@ -119,7 +234,8 @@ def cast_rays():
             color = (0, 0, 0) 
         else:
             intensity = max(0, 1.0 - (corrected_distance / MAX_DEPTH))
-            color = (int(50 * intensity), int(60 * intensity), int(50 * intensity)) 
+            wc = STAGES[current_stage]['wall_color']
+            color = (int(wc[0] * intensity), int(wc[1] * intensity), int(wc[2] * intensity))
             
         pygame.draw.rect(view_surface, color, (x, ceiling, 4, wall_height))
 
@@ -207,9 +323,10 @@ def render_sprites():
                 body_y = item_y - size/3 + breathe
                 head_y = body_y - size*0.2
                 
-                b_dark = apply_fog((10, 10, 10), intensity)
-                b_light = apply_fog((230, 230, 230), intensity)
-                b_gray = apply_fog((100, 100, 100), intensity)
+                mt = STAGES[current_stage]['monster_tint']
+                b_dark = apply_fog((10 * mt[0], 10 * mt[1], 10 * mt[2]), intensity)
+                b_light = apply_fog((230 * mt[0], 230 * mt[1], 230 * mt[2]), intensity)
+                b_gray = apply_fog((100 * mt[0], 100 * mt[1], 100 * mt[2]), intensity)
                 
                 pygame.draw.polygon(view_surface, b_dark, [(screen_x - size*0.4, body_y + size*0.6), (screen_x + size*0.4, body_y + size*0.6), (screen_x + size*0.25, body_y), (screen_x - size*0.25, body_y)])
                 pygame.draw.polygon(view_surface, b_gray, [(screen_x, body_y + size*0.45), (screen_x - size*0.2, body_y + size*0.1), (screen_x - size*0.1, body_y)])
@@ -249,8 +366,9 @@ def render_sprites():
                 breathe = math.sin(pygame.time.get_ticks() * 0.02 + obj['offset'] * 10) * (size/20)
                 body_y = item_y - size/3 + breathe
                 
-                b_dark = apply_fog((15, 10, 15), intensity)
-                b_mid = apply_fog((35, 25, 35), intensity)
+                mt = STAGES[current_stage]['monster_tint']
+                b_dark = apply_fog((15 * mt[0], 10 * mt[1], 15 * mt[2]), intensity)
+                b_mid = apply_fog((35 * mt[0], 25 * mt[1], 35 * mt[2]), intensity)
                 blood = apply_fog((150, 0, 0), intensity)
                 bone = apply_fog((200, 200, 180), intensity)
                 e_glow = apply_fog((255, 0, 0), intensity)
@@ -287,8 +405,12 @@ def render_sprites():
 
 def update_entities_and_collision():
     global player_health, player_armor, pain_timer, attack_cooldown
-    global spawn_timer, rat_sound_timer, boss_sound_timer, entities, kill_count, boss_spawn_counter
-    
+    global rat_sound_timer, boss_sound_timer, entities, kill_count
+    global stage_kills, boss_spawned, stage_state, stage_clear_timer
+
+    if stage_state != 'PLAYING' and stage_state != 'BOSS':
+        return  # jangan update dunia saat layar clear/transisi
+
     if rat_sound_timer > 0: rat_sound_timer -= 1
     if boss_sound_timer > 0: boss_sound_timer -= 1
     
@@ -310,19 +432,6 @@ def update_entities_and_collision():
         boss_sfx.set_volume(max(0.0, 1.0 - (min_boss_dist / MAX_DEPTH)))
         boss_sfx.play()
         boss_sound_timer = 150 
-
-    spawn_timer += 1
-    if spawn_timer >= 120: 
-        spawn_timer = 0
-        while True:
-            rx = random.randint(1, len(world_map[0])-2)
-            ry = random.randint(1, len(world_map)-2)
-            if world_map[ry][rx] == 0:
-                sx = rx * TILE_SIZE + TILE_SIZE/2
-                sy = ry * TILE_SIZE + TILE_SIZE/2
-                if math.hypot(sx - player_x, sy - player_y) > 300: 
-                    entities.append({'id': f'mon_{pygame.time.get_ticks()}', 'type': 'monster', 'x': sx, 'y': sy, 'active': True, 'hp': 2, 'speed': 1.6, 'offset': random.random()})
-                    break
 
     for b in bullets:
         if not b['active']: continue
@@ -349,24 +458,26 @@ def update_entities_and_collision():
                         kill_count += 1 
                         
                         if ent['type'] == 'monster':
-                            boss_spawn_counter += 1
-                            if boss_spawn_counter >= 10:
-                                boss_spawn_counter = 0
-                                while True:
-                                    rx = random.randint(1, len(world_map[0])-2)
-                                    ry = random.randint(1, len(world_map)-2)
-                                    if world_map[ry][rx] == 0:
-                                        sx = rx * TILE_SIZE + TILE_SIZE/2
-                                        sy = ry * TILE_SIZE + TILE_SIZE/2
-                                        if math.hypot(sx - player_x, sy - player_y) > 300:
-                                            entities.append({'id': f'boss_{pygame.time.get_ticks()}', 'type': 'boss', 'x': sx, 'y': sy, 'active': True, 'hp': 25, 'speed': 0.8, 'offset': random.random()})
-                                            break
+                            stage_kills += 1
                             
                             roll = random.random()
                             if roll <= 0.80: drop_type = 'ammo'
                             elif roll <= 0.95: drop_type = 'armor'
                             else: drop_type = 'health'
                             entities.append({'id': f'drop_{random.random()}', 'type': drop_type, 'x': ent['x'], 'y': ent['y'], 'active': True})
+
+                            # Semua musuh biasa di stage ini habis -> panggil boss stage
+                            cfg = STAGES[current_stage]
+                            if stage_kills >= cfg['monster_count'] and not boss_spawned:
+                                boss_spawned = True
+                                stage_state = 'BOSS'
+                                bx, by = find_open_tile(min_dist_from_player=300)
+                                entities.append({
+                                    'id': f'boss_{pygame.time.get_ticks()}', 'type': 'boss',
+                                    'x': bx, 'y': by, 'active': True,
+                                    'hp': cfg['boss_hp'], 'speed': cfg['boss_speed'],
+                                    'offset': random.random()
+                                })
                         
                         elif ent['type'] == 'boss':
                             for _ in range(3):
@@ -375,6 +486,10 @@ def update_entities_and_collision():
                                 elif roll <= 0.90: drop_type = 'armor'
                                 else: drop_type = 'health'
                                 entities.append({'id': f'drop_{random.random()}', 'type': drop_type, 'x': ent['x']+random.randint(-20,20), 'y': ent['y']+random.randint(-20,20), 'active': True})
+
+                            # Boss tumbang -> stage selesai
+                            stage_state = 'CLEAR'
+                            stage_clear_timer = 210
                     break
 
     for ent in entities:
@@ -513,6 +628,8 @@ try:
 except:
     pass
 
+load_stage(current_stage)
+
 running = True
 while running:
     if player_health <= 0: game_over = True
@@ -532,7 +649,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT: running = False
         
-        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over and stage_state in ('PLAYING', 'BOSS'):
             if event.button == 1 and has_weapon and current_mag > 0 and recoil_timer == 0 and reload_timer == 0:
                 current_mag -= 1 
                 recoil_timer = 15       
@@ -541,10 +658,22 @@ while running:
                 
                 bullets.append({'x': player_x, 'y': player_y, 'angle': player_angle, 'speed': 25.0, 'active': True})
 
-    if not game_over:
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]: running = False
+    if stage_banner_timer > 0:
+        stage_banner_timer -= 1
 
+    if stage_state == 'CLEAR':
+        stage_clear_timer -= 1
+        if stage_clear_timer <= 0:
+            if current_stage + 1 < TOTAL_STAGES:
+                current_stage += 1
+                load_stage(current_stage)
+            else:
+                stage_state = 'VICTORY'
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_ESCAPE]: running = False
+
+    if not game_over and stage_state in ('PLAYING', 'BOSS'):
         if keys[pygame.K_r] and has_weapon and current_mag < max_mag and reserve_ammo > 0 and reload_timer == 0:
             reload_timer = RELOAD_TIME
 
@@ -587,24 +716,6 @@ while running:
                         player_health = min(100, player_health + 80) 
 
         update_entities_and_collision()
-        
-        min_rat_dist = 9999
-        min_boss_dist = 9999
-        for ent in entities:
-            if ent['active']:
-                d = math.hypot(player_x - ent['x'], player_y - ent['y'])
-                if ent['type'] == 'monster' and d < min_rat_dist: min_rat_dist = d
-                if ent['type'] == 'boss' and d < min_boss_dist: min_boss_dist = d
-
-        if rat_sound_timer == 0 and min_rat_dist < MAX_DEPTH and rat_sfx:
-            rat_sfx.set_volume(max(0.0, 1.0 - (min_rat_dist / MAX_DEPTH)))
-            rat_sfx.play()
-            rat_sound_timer = 90
-
-        if boss_sound_timer == 0 and min_boss_dist < MAX_DEPTH and boss_sfx:
-            boss_sfx.set_volume(max(0.0, 1.0 - (min_boss_dist / MAX_DEPTH)))
-            boss_sfx.play()
-            boss_sound_timer = 150
 
     view_surface.fill((0, 0, 0)) 
     cast_rays()         
@@ -621,7 +732,18 @@ while running:
     draw_doom_hud()       
     
     screen.blit(font_large.render(f"DIBASMI: {kill_count}", True, (255, 0, 0)), (20, 20))
-    
+    screen.blit(font_small.render(STAGES[current_stage]['name'], True, (255, 220, 100)), (20, 60))
+
+    if stage_state == 'PLAYING':
+        sisa = max(0, STAGES[current_stage]['monster_count'] - stage_kills)
+        screen.blit(font_small.render(f"MUSUH TERSISA: {sisa}", True, (200, 200, 200)), (20, 90))
+    elif stage_state == 'BOSS':
+        boss_hp_left = 0
+        for ent in entities:
+            if ent['type'] == 'boss' and ent['active']:
+                boss_hp_left = ent['hp']
+        screen.blit(font_small.render(f"BOSS MUNCUL! HP: {boss_hp_left}", True, (255, 60, 60)), (20, 90))
+
     if reload_timer > 0:
         screen.blit(font_large.render("MENGISI PELURU...", True, (255, 255, 0)), (WIDTH//2 - 120, VIEW_HEIGHT//2 + 50))
     elif has_weapon and current_mag == 0 and reserve_ammo > 0:
@@ -629,12 +751,45 @@ while running:
     elif has_weapon and current_mag == 0 and reserve_ammo == 0:
         screen.blit(font_large.render("PELURU HABIS!", True, (255, 0, 0)), (WIDTH//2 - 100, VIEW_HEIGHT//2 + 50))
 
+    # Banner nama stage di awal stage
+    if stage_banner_timer > 0 and stage_state == 'PLAYING':
+        alpha = 255 if stage_banner_timer > 40 else int(255 * (stage_banner_timer / 40))
+        banner_txt = font_stage.render(STAGES[current_stage]['name'], True, (255, 255, 255))
+        banner_txt.set_alpha(alpha)
+        screen.blit(banner_txt, (WIDTH//2 - banner_txt.get_width()//2, VIEW_HEIGHT//2 - 100))
+
+    # Layar Stage Clear
+    if stage_state == 'CLEAR':
+        s = pygame.Surface((WIDTH, VIEW_HEIGHT))
+        s.set_alpha(160)
+        s.fill((0, 40, 0))
+        screen.blit(s, (0, 0))
+        clear_txt = font_stage.render(f"{STAGES[current_stage]['name']} SELESAI!", True, (120, 255, 120))
+        screen.blit(clear_txt, (WIDTH//2 - clear_txt.get_width()//2, VIEW_HEIGHT//2 - 60))
+        if current_stage + 1 < TOTAL_STAGES:
+            next_txt = font_large.render(f"Bersiap menuju {STAGES[current_stage + 1]['name']}...", True, (255, 255, 255))
+        else:
+            next_txt = font_large.render("Menyiapkan tahap akhir...", True, (255, 255, 255))
+        screen.blit(next_txt, (WIDTH//2 - next_txt.get_width()//2, VIEW_HEIGHT//2 + 10))
+
+    # Layar Kemenangan
+    if stage_state == 'VICTORY':
+        s = pygame.Surface((WIDTH, VIEW_HEIGHT))
+        s.set_alpha(190)
+        s.fill((10, 30, 10))
+        screen.blit(s, (0, 0))
+        win_txt = font_huge.render("KORUPSI DIBASMI TUNTAS!", True, (255, 255, 255))
+        screen.blit(win_txt, (WIDTH//2 - win_txt.get_width()//2, VIEW_HEIGHT//2 - 60))
+        stat_txt = font_large.render(f"Total musuh dibasmi: {kill_count}", True, (255, 255, 0))
+        screen.blit(stat_txt, (WIDTH//2 - stat_txt.get_width()//2, VIEW_HEIGHT//2 + 20))
+
     if game_over:
         s = pygame.Surface((WIDTH, VIEW_HEIGHT)) 
         s.set_alpha(180) 
         s.fill((150, 0, 0)) 
         screen.blit(s, (0,0))
         screen.blit(font_huge.render("TUMBANG OLEH KORUPSI", True, (255, 255, 255)), (WIDTH//2 - 380, VIEW_HEIGHT//2 - 45))
+        screen.blit(font_large.render(f"Gugur di {STAGES[current_stage]['name']}", True, (255, 200, 200)), (WIDTH//2 - 150, VIEW_HEIGHT//2 + 5))
         screen.blit(font_large.render(f"TOTAL DIBASMI: {kill_count}", True, (255, 255, 0)), (WIDTH//2 - 120, VIEW_HEIGHT//2 + 40))
 
     pygame.draw.circle(screen, (0, 255, 0), (WIDTH // 2, VIEW_HEIGHT // 2), 2)
